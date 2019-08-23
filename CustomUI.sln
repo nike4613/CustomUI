@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BuildTools", "BuildTools", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CollectDependencies", "BuildTools\CollectDependencies\CollectDependencies.csproj", "{5F33B310-DC8D-4C0D-877E-BAC3908DE10F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{68237A68-2553-4F45-B6EA-41E824D44BFD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +31,10 @@ Global
 		{5F33B310-DC8D-4C0D-877E-BAC3908DE10F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5F33B310-DC8D-4C0D-877E-BAC3908DE10F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5F33B310-DC8D-4C0D-877E-BAC3908DE10F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68237A68-2553-4F45-B6EA-41E824D44BFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68237A68-2553-4F45-B6EA-41E824D44BFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68237A68-2553-4F45-B6EA-41E824D44BFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68237A68-2553-4F45-B6EA-41E824D44BFD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

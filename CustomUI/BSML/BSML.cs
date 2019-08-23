@@ -8,6 +8,7 @@ namespace CustomUI.BSML
 {
     public static class BSML
     {
+        public const string CoreNamespace = "bsml://beat-saber-markup-core";
 
         public static void RegisterCustomElement<T>() where T : IElement =>
             RegisterCustomElementImpl(typeof(T));

@@ -78,6 +78,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\FastExpressionCompiler\src\FastExpressionCompiler\FastExpressionCompiler.cs">
+      <Link>Util\FastExpressionCompiler.cs</Link>
+    </Compile>
     <Compile Include="BSML\BSML.cs" />
     <Compile Include="BSML\Attribute.cs" />
     <Compile Include="BSML\BSMLFile.cs" />

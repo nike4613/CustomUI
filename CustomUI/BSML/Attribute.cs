@@ -14,13 +14,37 @@ using static System.Linq.Expressions.Expression;
 
 namespace CustomUI.BSML
 {
+    /// <summary>
+    /// The type of an <see cref="Attribute"/>.
+    /// </summary>
     public enum AttributeType
     {
+        /// <summary>
+        /// The attribute holds a literal string value.
+        /// </summary>
         Literal = 0x1,
+        /// <summary>
+        /// The attribute is a binding of some kind. Never seen on its own.
+        /// </summary>
         Binding = 0x2,
+        /// <summary>
+        /// The attribute is an input binding. It takes the result of the field/property
+        /// specified as its value, which may be gotten repeatedly.
+        /// </summary>
         InputBinding = Binding | 0x4,
+        /// <summary>
+        /// The attribute is an output binding. It puts some value in the field/property
+        /// specified, which may be set repeatedly.
+        /// </summary>
         OutputBinding = Binding | 0x8,
+        /// <summary>
+        /// The attribute is a function binding. This is used for events.
+        /// </summary>
         FunctionBinding = Binding | 0x10,
+        /// <summary>
+        /// The attribute represents a self ref. This is an <see cref="OutputBinding"/> that 
+        /// gets the value of the element the attribute is attached to.
+        /// </summary>
         SelfRef = OutputBinding | 0x1,
 
         ElementAttribute = 0x20
@@ -33,7 +57,7 @@ namespace CustomUI.BSML
 
         public AttributeType Type { get; private set; }
 
-        public string LiteralValue => "";
+        public string LiteralValue { get; }
 
         public delegate object GetBinding(object target);
         public delegate void SetBinding(object target, object value);
@@ -49,34 +73,28 @@ namespace CustomUI.BSML
 
         public Attribute[] ElementAttributes { get; private set; }
 
-        public IEnumerable<IElement> ElementContent { get; private set; }
-
-        private static Regex functionBinding = new Regex(@"^([\.a-zA-Z0-9_]+)\((.*)\)$", RegexOptions.Compiled);
-
-        private string value;
-
-        private static Dictionary<Tuple<Type, string>, Tuple<Type, GetBinding, SetBinding>> bindingCache = new Dictionary<Tuple<Type, string>, Tuple<Type, GetBinding, SetBinding>>();
+        public IElement[] ElementContent { get; private set; }
 
         internal Attribute(XmlAttribute attr, Type connectedType)
         {
             Name = attr.LocalName;
             NameSpace = attr.NamespaceURI;
             LinkedType = connectedType;
-            value = attr.Value.Trim();
+            LiteralValue = attr.Value.Trim();
 
-            if (value[0] == '{' && value[value.Length - 1] == '}')
-                Type = AttributeType.Binding;
-            if (Type == AttributeType.Binding)
+            if (LiteralValue[0] == '{' && LiteralValue[LiteralValue.Length - 1] == '}')
             {
-                var trimmed = value.Substring(1, value.Length - 2).Trim();
+                Type = AttributeType.Binding;
+                var trimmed = LiteralValue.Substring(1, LiteralValue.Length - 2).Trim();
 
                 if (trimmed[0] == '=') Type = AttributeType.InputBinding;
                 if (trimmed[trimmed.Length - 1] == '=') Type = AttributeType.OutputBinding;
 
-                Match reMatch;
                 if (Type == AttributeType.InputBinding || Type == AttributeType.OutputBinding)
                 {
-                    value = trimmed.Trim('=').Trim();
+                    LiteralValue = trimmed.Trim('=').Trim();
+
+                    // TODO: support multi-level accesses
 
                     if (Type == AttributeType.InputBinding)
                     {
@@ -86,7 +104,7 @@ namespace CustomUI.BSML
                                     Parameter(typeof(object), "self"),
                                     connectedType
                                 ),
-                                value
+                                LiteralValue
                             );
 
                         BindingType = propExpr.Type;
@@ -105,7 +123,7 @@ namespace CustomUI.BSML
                                     Parameter(typeof(object), "self"),
                                     connectedType
                                 ),
-                                value
+                                LiteralValue
                             );
 
                         BindingType = propExpr.Type;
@@ -128,15 +146,43 @@ namespace CustomUI.BSML
                         Type = AttributeType.SelfRef;
                     }
                 }
-                else if ((reMatch = functionBinding.Match(trimmed)).Value != "")
+                else if (trimmed.EndsWith("()"))
                 {
-                    value = trimmed;
+                    LiteralValue = trimmed;
+                    Type = AttributeType.FunctionBinding;
 
+                    trimmed = trimmed.TrimEnd('(', ')').Trim();
+
+                    FunctionBinding = connectedType.GetMethod(trimmed, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 }
+            }
+            else
+            {
+                Type = AttributeType.Literal;
             }
 
             if (NameSpace == BSML.CoreNamespace && Name == "ref" && Type != AttributeType.SelfRef)
                 throw new InvalidProgramException("'ref' parameter MUST be an OutputBinding");
+        }
+
+        internal Attribute(XmlElement elem, Type connectedType)
+        {
+            if (!IsElementAttribute(elem))
+                throw new ArgumentException("When an Attribute is constructed with an Element, is MUST be a valid Element attribute", nameof(elem));
+
+            Name = elem.LocalName.Split('.').Last();
+            NameSpace = elem.NamespaceURI;
+            LinkedType = connectedType;
+
+            ElementAttributes = BSML.GetAttributes(elem, out connectedType, false).ToArray();
+
+            ElementContent = BSML.ReadTree(elem.ChildNodes.Cast<XmlNode>(), connectedType).ToArray();
+        }
+
+        internal static bool IsElementAttribute(XmlElement elem)
+        {
+            var spl = elem.LocalName.Split('.');
+            return spl.Length == 2 && spl[0] == elem.ParentNode.LocalName && elem.NamespaceURI == elem.ParentNode.NamespaceURI;
         }
     }
 }

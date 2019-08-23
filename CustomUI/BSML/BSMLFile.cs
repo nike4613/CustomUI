@@ -25,6 +25,11 @@ namespace CustomUI.BSML
         }
 
 
+        public IElement Parse()
+        { // seperate because there are only a handful of valid top-level elements that should be processed
 
+
+            return null;
+        }
     }
 }

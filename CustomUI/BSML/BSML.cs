@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace CustomUI.BSML
 {
@@ -23,6 +24,18 @@ namespace CustomUI.BSML
         internal static void RegisterCustomElementImpl(Type type)
         {
 
+        }
+
+        // Text elements have their own IElement type
+        internal static IEnumerable<IElement> ReadTree(IEnumerable<XmlNode> elements, Type owningType)
+        {
+            return null;
+        }
+
+        internal static IEnumerable<Attribute> GetAttributes(XmlElement element, out Type childOwner, bool allowElementAttributes = true)
+        {
+            childOwner = null;
+            return null;
         }
     }
 

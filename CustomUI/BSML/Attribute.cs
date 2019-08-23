@@ -47,32 +47,82 @@ namespace CustomUI.BSML
         /// </summary>
         SelfRef = OutputBinding | 0x1,
 
+        /// <summary>
+        /// The attribute is an element-type attribute. It has child elements and attributes.
+        /// This is used for more complex properties.
+        /// </summary>
         ElementAttribute = 0x20
     }
 
+    /// <summary>
+    /// A BSML Attribute.
+    /// </summary>
     public class Attribute
     {
+        /// <summary>
+        /// The XML namespace the attribute was defined with.
+        /// </summary>
         public string NameSpace { get; private set; }
+        /// <summary>
+        /// The name of the attribute.
+        /// </summary>
         public string Name { get; private set; }
 
+        /// <summary>
+        /// The type of attribute. Determines which fields are valid.
+        /// </summary>
         public AttributeType Type { get; private set; }
 
+        /// <summary>
+        /// The literal value of the attribute. In the case of bindings, it will be the name of the
+        /// field/property/method referenced. 
+        /// </summary>
         public string LiteralValue { get; }
 
+        /// <summary>
+        /// A getter delegate type.
+        /// </summary>
+        /// <param name="target">the binding object source.</param>
+        /// <returns>the binding value</returns>
         public delegate object GetBinding(object target);
+        /// <summary>
+        /// A setter delegate type.
+        /// </summary>
+        /// <param name="target">the binding object source.</param>
+        /// <param name="value">the binding value</param>
         public delegate void SetBinding(object target, object value);
 
+        /// <summary>
+        /// The type that all bindings reference. Always valid.
+        /// </summary>
         public Type LinkedType { get; private set; }
+        /// <summary>
+        /// The type of the binding. Only valid for bindings.
+        /// </summary>
         public Type BindingType { get; private set; }
 
+        /// <summary>
+        /// The getter for an <see cref="AttributeType.OutputBinding"/>.
+        /// </summary>
         public GetBinding BindingGetter { get; private set; }
+        /// <summary>
+        /// The setter for an <see cref="AttributeType.InputBinding"/>.
+        /// </summary>
         public SetBinding BindingSetter { get; private set; }
 
-
+        /// <summary>
+        /// The <see cref="MethodInfo"/> for the function binding. Only valid on <see cref="AttributeType.FunctionBinding"/>
+        /// </summary>
         public MethodInfo FunctionBinding { get; private set; }
 
+        /// <summary>
+        /// The attributes of this element attribute. Only valid on <see cref="AttributeType.ElementAttribute"/>.
+        /// </summary>
         public Attribute[] ElementAttributes { get; private set; }
 
+        /// <summary>
+        /// The content of this element attribute. Only valid on <see cref="AttributeType.ElementAttribute"/>.
+        /// </summary>
         public IElement[] ElementContent { get; private set; }
 
         internal Attribute(XmlAttribute attr, Type connectedType)

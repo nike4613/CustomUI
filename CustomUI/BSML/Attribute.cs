@@ -125,7 +125,7 @@ namespace CustomUI.BSML
         /// </summary>
         public IElement[] ElementContent { get; private set; }
 
-        internal Attribute(XmlAttribute attr, Type connectedType)
+        internal Attribute(BSMLParser parser, XmlAttribute attr, Type connectedType)
         {
             Name = attr.LocalName;
             NameSpace = attr.NamespaceURI;
@@ -215,7 +215,7 @@ namespace CustomUI.BSML
                 throw new InvalidProgramException("'ref' parameter MUST be an OutputBinding");
         }
 
-        internal Attribute(XmlElement elem, Type connectedType)
+        internal Attribute(BSMLParser parser, XmlElement elem, Type connectedType)
         {
             if (!IsElementAttribute(elem))
                 throw new ArgumentException("When an Attribute is constructed with an Element, is MUST be a valid Element attribute", nameof(elem));
@@ -224,9 +224,9 @@ namespace CustomUI.BSML
             NameSpace = elem.NamespaceURI;
             LinkedType = connectedType;
 
-            ElementAttributes = BSML.GetAttributes(elem, out connectedType, false).ToArray();
+            ElementAttributes = parser.GetAttributes(elem, ref connectedType, false).ToArray();
 
-            ElementContent = BSML.ReadTree(elem.ChildNodes.Cast<XmlNode>(), connectedType).ToArray();
+            ElementContent = parser.ReadTree(elem.ChildNodes.Cast<XmlNode>(), connectedType).ToArray();
         }
 
         internal static bool IsElementAttribute(XmlElement elem)

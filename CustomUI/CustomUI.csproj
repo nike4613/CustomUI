@@ -84,7 +84,7 @@
     </Compile>
     <Compile Include="BSML\BSML.cs" />
     <Compile Include="BSML\Attribute.cs" />
-    <Compile Include="BSML\BSMLFile.cs" />
+    <Compile Include="BSML\BSMLParser.cs" />
     <Compile Include="BSML\DelegateTypes.cs" />
     <Compile Include="BSML\ElementController.cs" />
     <Compile Include="BSML\IElement.cs" />

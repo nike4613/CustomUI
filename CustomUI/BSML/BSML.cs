@@ -25,18 +25,6 @@ namespace CustomUI.BSML
         {
 
         }
-
-        // Text elements have their own IElement type
-        internal static IEnumerable<IElement> ReadTree(IEnumerable<XmlNode> elements, Type owningType)
-        {
-            return null;
-        }
-
-        internal static IEnumerable<Attribute> GetAttributes(XmlElement element, out Type childOwner, bool allowElementAttributes = true)
-        {
-            childOwner = null;
-            return null;
-        }
     }
 
     public class ElementNameAttribute : System.Attribute

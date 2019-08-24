@@ -15,17 +15,20 @@ namespace CustomUI.BSML
         private XmlDocument tree;
         private string StartingNamespace;
 
-        private BSMLParser(Assembly owner, XmlDocument tree)
+        internal XmlDocument Doc => tree;
+
+        private BSMLParser(Assembly owner, string startingNamespace, XmlDocument tree)
         {
             this.tree = tree;
             this.owner = owner;
+            StartingNamespace = startingNamespace;
         }
 
-        public static BSMLParser LoadFrom(Assembly owner, TextReader reader)
+        public static BSMLParser LoadFrom(Assembly owner, string startingNamespace, TextReader reader)
         {
             var xml = new XmlDocument();
             xml.Load(reader);
-            return new BSMLParser(owner, xml);
+            return new BSMLParser(owner, startingNamespace, xml);
         }
 
 
@@ -79,21 +82,21 @@ namespace CustomUI.BSML
             return null;
         }
 
-        internal IEnumerable<Attribute> GetAttributes(XmlElement element, ref Type childOwner, bool allowElementAttributes = true)
+        internal IEnumerable<Attribute> GetAttributes(XmlElement element, ref Type controllerType, bool allowElementAttributes = true)
         {
             var attrs = new List<Attribute>();
 
             foreach (var attr in element.Attributes.Cast<XmlAttribute>())
-                attrs.Add(new Attribute(this, attr, childOwner));
+                attrs.Add(new Attribute(this, attr, controllerType));
 
-            var newType = GetController(attrs, childOwner);
-            if (newType != null) childOwner = newType;
+            var newType = GetController(attrs, controllerType);
+            if (newType != null) controllerType = newType;
 
             if (allowElementAttributes)
             {
                 foreach (var node in element.ChildNodes.Cast<XmlNode>())
-                    if (node is XmlElement el)
-                        attrs.Add(new Attribute(this, el, childOwner));
+                    if (node is XmlElement el && Attribute.IsElementAttribute(el))
+                        attrs.Add(new Attribute(this, el, controllerType));
             }
 
             return attrs;

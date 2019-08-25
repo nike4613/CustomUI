@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
@@ -11,6 +13,11 @@ namespace CustomUI.BSML
     public static class BSML
     {
         public const string CoreNamespace = "bsml://beat-saber-markup-core";
+
+        internal static void ResetGlobalState()
+        {
+            sharedState = new ConditionalWeakTable<Type, object>();
+        }
 
         public static void RegisterCustomElement<T>() where T : IElement =>
             RegisterCustomElementImpl(typeof(T));
@@ -44,6 +51,41 @@ namespace CustomUI.BSML
 
 
         }
+
+        private static ConditionalWeakTable<Type, object> sharedState = new ConditionalWeakTable<Type, object>();
+
+        /// <summary>
+        /// Gets the shared state object of the type that it was called from, or <paramref name="skip"/> stack frames up.
+        /// </summary>
+        /// <note>
+        /// If no object exists for that type, a new one is created as <typeparamref name="T"/> and returned. Otherwise, 
+        /// if the type parameter is inconsistent, returns null.
+        /// </note>
+        /// <typeparam name="T">the type of the shared state</typeparam>
+        /// <param name="skip">the number of stack frames to skip</param>
+        /// <returns>the shared state object</returns>
+        public static T GetSharedState<T>(int skip = 0) where T : class, new()
+        {
+            var type = new StackTrace(1).GetFrame(skip).GetMethod().DeclaringType;
+            if (!sharedState.TryGetValue(type, out var val))
+            {
+                val = new T();
+                sharedState.Add(type, val);
+            }
+
+            return val as T;
+        }
+
+        /// <summary>
+        /// Clears the shared state object for the type calling, or <paramref name="skip"/> stack frames up.
+        /// </summary>
+        /// <param name="skip">the number of stack frames to skip</param>
+        public static void ResetSharedState(int skip = 0)
+        {
+            var type = new StackTrace(1).GetFrame(skip).GetMethod().DeclaringType;
+            sharedState.Remove(type);
+        }
+
     }
 
     public class ElementNameAttribute : System.Attribute

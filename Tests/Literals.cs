@@ -1,15 +1,15 @@
-﻿using System;
-using System.IO;
-using System.Reflection;
-using CustomUI.BSML;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using CustomUI.BSML;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Tests
 {
-    [TestClass]
-    public class UnitTest1
+    public static class Literals
     {
-        public const string BSML = @"
+        public const string BSML_ = @"
 <!-- This would be in the embedded file 'BSIPA_ModList.UI.MainPanel.bsml' or something -->
 <bs:panel xmlns:bs=""bsml://beat-saber-markup-core"" back-button=""true"" bs:controller=""MainPanelController"">
 	<bs:horizontal-stack align=""center"" >
@@ -45,24 +45,16 @@ namespace Tests
 	</bs:horizontal-stack>
 </bs:panel>
 ";
-
-        [TestMethod]
-        public void BSMLAttributes()
-        {
-            var bsml = BSMLParser.LoadFrom(Assembly.GetExecutingAssembly(), "Tests", new StringReader(BSML));
-
-            var doc = bsml.Doc;
-
-            Type owner = null;
-            var attrs = bsml.GetAttributes(doc.DocumentElement, ref owner);
-        }
-    }
-
-    public class MainPanelController
-    {
-        public class ListCell
-        {
-
-        }
+        public const string CustomElementBSML = @"
+<bs:panel back-button='true' bs:controller='Tests.MainPanelController'
+        xmlns:bs='" + BSML.CoreNamespace + @"'
+        xmlns:test='bsml://tester'>
+    <test:MyElement literalAttr='ha, string!' inBindingAttr='{=InBinding}' outBindingAttr='{OutBinding=}' bs:ref='{Ref=}'>
+        <test:MyElement.elementAttr literalAttrElem='ha, string! Elem' inBindingAttrElem='{=InBindingElem}' outBindingAttrElem='{OutBindingElem=}'>
+            <test:MyElement.elementAttr.notAnAttr></test:MyElement.elementAttr.notAnAttr>
+        </test:MyElement.elementAttr>
+    </test:MyElement>
+</bs:panel>
+";
     }
 }

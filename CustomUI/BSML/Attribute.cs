@@ -102,11 +102,11 @@ namespace CustomUI.BSML
         public Type BindingType { get; private set; }
 
         /// <summary>
-        /// The getter for an <see cref="AttributeType.OutputBinding"/>.
+        /// The getter for an <see cref="AttributeType.InputBinding"/>.
         /// </summary>
         public GetBinding BindingGetter { get; private set; }
         /// <summary>
-        /// The setter for an <see cref="AttributeType.InputBinding"/>.
+        /// The setter for an <see cref="AttributeType.OutputBinding"/>.
         /// </summary>
         public SetBinding BindingSetter { get; private set; }
 
@@ -127,6 +127,8 @@ namespace CustomUI.BSML
 
         internal Attribute(BSMLParser parser, XmlAttribute attr, Type connectedType)
         {
+            Logger.log.Debug($"Processing attribute {attr.OuterXml} for {connectedType} on {attr?.OwnerElement?.Name} {attr?.OwnerElement?.NamespaceURI}");
+
             Name = attr.LocalName;
             NameSpace = attr.NamespaceURI;
             LinkedType = connectedType;
@@ -148,10 +150,12 @@ namespace CustomUI.BSML
 
                     if (Type == AttributeType.InputBinding)
                     {
+                        var selfParam = Parameter(typeof(object), "self");
+
                         var propExpr =
                             PropertyOrField(
                                 Convert(
-                                    Parameter(typeof(object), "self"),
+                                    selfParam,
                                     connectedType
                                 ),
                                 LiteralValue
@@ -161,16 +165,19 @@ namespace CustomUI.BSML
 
                         BindingGetter = Lambda<GetBinding>(
                                 Convert(propExpr, typeof(object)),
-                                Parameter(typeof(object), "self")
+                                selfParam
                             ).CompileFast();
                     }
 
                     if (Type == AttributeType.OutputBinding)
                     {
+                        var selfParam = Parameter(typeof(object), "self");
+                        var valueParam = Parameter(typeof(object), "value");
+
                         var propExpr =
                             PropertyOrField(
                                 Convert(
-                                    Parameter(typeof(object), "self"),
+                                    selfParam,
                                     connectedType
                                 ),
                                 LiteralValue
@@ -180,14 +187,14 @@ namespace CustomUI.BSML
 
                         BindingSetter = Lambda<SetBinding>(
                                 Assign(
-                                    Convert(propExpr, typeof(object)),
+                                    propExpr,
                                     Convert(
-                                        Parameter(typeof(object), "value"),
+                                        valueParam,
                                         BindingType
                                     )
                                 ),
-                                Parameter(typeof(object), "self"),
-                                Parameter(typeof(object), "value")
+                                selfParam,
+                                valueParam
                             ).CompileFast();
                     }
 
@@ -211,6 +218,9 @@ namespace CustomUI.BSML
                 Type = AttributeType.Literal;
             }
 
+            if (Type == AttributeType.Binding)
+                throw new InvalidProgramException("Invalid binding type!");
+
             if (NameSpace == BSML.CoreNamespace && Name == "ref" && Type != AttributeType.SelfRef)
                 throw new InvalidProgramException("'ref' parameter MUST be an OutputBinding");
         }
@@ -219,6 +229,8 @@ namespace CustomUI.BSML
         {
             if (!IsElementAttribute(elem))
                 throw new ArgumentException("When an Attribute is constructed with an Element, is MUST be a valid Element attribute", nameof(elem));
+
+            Logger.log.Debug($"Processing element attribute {elem?.Name} {elem?.NamespaceURI} for {connectedType} on {elem?.ParentNode?.Name} {elem?.ParentNode?.NamespaceURI}");
 
             Name = elem.LocalName.Split('.').Last();
             NameSpace = elem.NamespaceURI;

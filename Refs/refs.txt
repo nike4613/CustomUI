@@ -4,7 +4,7 @@
 """Assembly-CSharp.dll
 """IPA.Loader.
 """"xml
-""""dll
+""""dll?noempty
 """Unity.TextMeshPro.dll
 """UnityEngine.
 """"dll

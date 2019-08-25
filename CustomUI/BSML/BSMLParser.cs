@@ -76,12 +76,6 @@ namespace CustomUI.BSML
             }
         }
 
-        // Text elements have their own IElement type
-        internal IEnumerable<IElement> ReadTree(IEnumerable<XmlNode> elements, Type owningType)
-        {
-            return null;
-        }
-
         internal IEnumerable<Attribute> GetAttributes(XmlElement element, ref Type controllerType, bool allowElementAttributes = true)
         {
             var attrs = new List<Attribute>();
@@ -100,6 +94,12 @@ namespace CustomUI.BSML
             }
 
             return attrs;
+        }
+
+        // Text elements have their own IElement type
+        internal IEnumerable<IElement> ReadTree(IEnumerable<XmlNode> elements, Type owningType)
+        {
+            return new IElement[0];
         }
     }
 }

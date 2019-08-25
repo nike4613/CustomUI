@@ -8,9 +8,11 @@ namespace Tests
     [ElementNamespace("bsml://tester")]
     public class CustomElement : IElement
     {
+        public Attribute[] Attributes { get; set; }
+
         public void Initialize(Attribute[] attributes)
         {
-
+            Attributes = attributes;
         }
     }
 

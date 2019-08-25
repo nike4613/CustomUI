@@ -29,6 +29,12 @@ namespace Tests
             BSML.RegisterCustomElement<CustomElement>();
         }
 
+        [TestCleanup]
+        public void Deinitialize()
+        {
+            BSML.ResetGlobalState();
+        }
+
         private void VerifyCustomElementStringAttributes(CustomUI.BSML.Attribute[] attrs, Type ogOwner)
         {
             var bindingTestObj = new MainPanelController();
@@ -123,7 +129,7 @@ namespace Tests
         }
 
         [TestMethod]
-        public void BSMLAttributes()
+        public void AttributesParsing()
         {
             var bsml = BSMLParser.LoadFrom(Assembly.GetExecutingAssembly(), "Tests", new StringReader(Literals.CustomElementBSML));
 
@@ -134,6 +140,33 @@ namespace Tests
             var attrs = bsml.GetAttributes(doc.DocumentElement.FirstChild as XmlElement, ref owner).ToArray();
 
             VerifyCustomElementStringAttributes(attrs, ogOwner);
+        }
+
+        private void VerifyCustomElementStringRootChildren(IElement[] elems, Type owner)
+        {
+            Assert.AreEqual(1, elems.Length);
+
+            var elem = elems[0];
+
+            Assert.IsInstanceOfType(elem, typeof(CustomElement));
+
+            var ce = elem as CustomElement;
+
+            VerifyCustomElementStringAttributes(ce.Attributes, owner);
+        }
+
+        [TestMethod]
+        public void ElementParsing()
+        {
+            var bsml = BSMLParser.LoadFrom(Assembly.GetExecutingAssembly(), "Tests", new StringReader(Literals.CustomElementBSML));
+
+            var doc = bsml.Doc;
+
+            var owner = typeof(MainPanelController);
+
+            var elems = bsml.ReadTree(new[] { doc.DocumentElement.FirstChild }, owner).ToArray();
+
+            VerifyCustomElementStringRootChildren(elems, owner);
         }
     }
 }

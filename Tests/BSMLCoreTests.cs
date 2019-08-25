@@ -29,19 +29,8 @@ namespace Tests
             BSML.RegisterCustomElement<CustomElement>();
         }
 
-        
-
-        [TestMethod]
-        public void BSMLAttributes()
+        private void VerifyCustomElementStringAttributes(CustomUI.BSML.Attribute[] attrs, Type ogOwner)
         {
-            var bsml = BSMLParser.LoadFrom(Assembly.GetExecutingAssembly(), "Tests", new StringReader(Literals.CustomElementBSML));
-
-            var doc = bsml.Doc;
-
-            var ogOwner = typeof(MainPanelController);
-            var owner = ogOwner;
-            var attrs = bsml.GetAttributes(doc.DocumentElement.FirstChild as XmlElement, ref owner).ToArray();
-
             var bindingTestObj = new MainPanelController();
 
             Assert.AreEqual(5, attrs.Length);
@@ -131,6 +120,20 @@ namespace Tests
             obj = new object();
             attr.BindingSetter(bindingTestObj, obj);
             Assert.AreEqual(obj, bindingTestObj.OutBindingElem);
+        }
+
+        [TestMethod]
+        public void BSMLAttributes()
+        {
+            var bsml = BSMLParser.LoadFrom(Assembly.GetExecutingAssembly(), "Tests", new StringReader(Literals.CustomElementBSML));
+
+            var doc = bsml.Doc;
+
+            var ogOwner = typeof(MainPanelController);
+            var owner = ogOwner;
+            var attrs = bsml.GetAttributes(doc.DocumentElement.FirstChild as XmlElement, ref owner).ToArray();
+
+            VerifyCustomElementStringAttributes(attrs, ogOwner);
         }
     }
 }

@@ -51,6 +51,10 @@ namespace CustomUI.BSML
         /// The attribute is an element-type attribute. It has child elements and attributes.
         /// This is used for more complex properties.
         /// </summary>
+        /// <note>
+        /// The namespace of an element attribute will always be the same as the namespace as
+        /// the element it is an attribute for.
+        /// </note>
         ElementAttribute = 0x20
     }
 
@@ -235,6 +239,8 @@ namespace CustomUI.BSML
             Name = elem.LocalName.Split('.').Last();
             NameSpace = elem.NamespaceURI;
             LinkedType = connectedType;
+
+            Type = AttributeType.ElementAttribute;
 
             ElementAttributes = parser.GetAttributes(elem, ref connectedType, false).ToArray();
 

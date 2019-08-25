@@ -88,6 +88,49 @@ namespace Tests
             obj = new CustomElement();
             attr.BindingSetter(bindingTestObj, obj);
             Assert.AreEqual(obj, bindingTestObj.Ref);
+
+            attr = attrs[4];
+
+            Assert.AreEqual(AttributeType.ElementAttribute, attr.Type);
+            Assert.AreEqual("elementAttr", attr.Name);
+            Assert.AreEqual("bsml://tester", attr.NameSpace);
+            Assert.AreEqual(ogOwner, attr.LinkedType);
+            Assert.AreEqual(null, attr.LiteralValue);
+
+            attrs = attr.ElementAttributes;
+
+            Assert.AreEqual(3, attrs.Length);
+
+            attr = attrs[0];
+
+            Assert.AreEqual(AttributeType.Literal, attr.Type);
+            Assert.AreEqual("literalAttrElem", attr.Name);
+            Assert.AreEqual("", attr.NameSpace);
+            Assert.AreEqual("ha, string! Elem", attr.LiteralValue);
+            Assert.AreEqual(ogOwner, attr.LinkedType);
+
+            attr = attrs[1];
+
+            Assert.AreEqual(AttributeType.InputBinding, attr.Type);
+            Assert.AreEqual("inBindingAttrElem", attr.Name);
+            Assert.AreEqual("", attr.NameSpace);
+            Assert.AreEqual(typeof(object), attr.BindingType);
+            Assert.AreEqual(ogOwner, attr.LinkedType);
+            Assert.AreEqual("InBindingElem", attr.LiteralValue);
+            bindingTestObj.InBindingElem = new object();
+            Assert.AreEqual(bindingTestObj.InBindingElem, attr.BindingGetter(bindingTestObj));
+
+            attr = attrs[2];
+
+            Assert.AreEqual(AttributeType.OutputBinding, attr.Type);
+            Assert.AreEqual("outBindingAttrElem", attr.Name);
+            Assert.AreEqual("", attr.NameSpace);
+            Assert.AreEqual(typeof(object), attr.BindingType);
+            Assert.AreEqual(ogOwner, attr.LinkedType);
+            Assert.AreEqual("OutBindingElem", attr.LiteralValue);
+            obj = new object();
+            attr.BindingSetter(bindingTestObj, obj);
+            Assert.AreEqual(obj, bindingTestObj.OutBindingElem);
         }
     }
 }

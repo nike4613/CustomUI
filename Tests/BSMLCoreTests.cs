@@ -77,7 +77,7 @@ namespace Tests
             Assert.AreEqual(AttributeType.SelfRef, attr.Type);
             Assert.AreEqual("ref", attr.Name);
             Assert.AreEqual(BSML.CoreNamespace, attr.NameSpace);
-            Assert.AreEqual(typeof(IElement), attr.BindingType);
+            Assert.AreEqual(typeof(Element), attr.BindingType);
             Assert.AreEqual(ogOwner, attr.LinkedType);
             Assert.AreEqual("Ref", attr.LiteralValue);
             obj = new CustomElement();
@@ -142,7 +142,7 @@ namespace Tests
             VerifyCustomElementStringAttributes(attrs, ogOwner);
         }
 
-        private void VerifyCustomElementStringRootChildren(IElement[] elems, Type owner)
+        private void VerifyCustomElementStringRootChildren(Element[] elems, Type owner)
         {
             Assert.AreEqual(1, elems.Length);
 

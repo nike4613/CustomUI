@@ -32,7 +32,7 @@ namespace CustomUI.BSML
         }
 
 
-        public IElement Parse()
+        public Element Parse()
         { // seperate because there are only a handful of valid top-level elements that should be processed
 
 
@@ -76,7 +76,7 @@ namespace CustomUI.BSML
             }
         }
 
-        internal IEnumerable<Attribute> GetAttributes(XmlElement element, ref Type controllerType, bool allowElementAttributes = true)
+        internal IEnumerable<Attribute> GetAttributes(XmlElement element, ref Type controllerType, out bool hasController, bool allowElementAttributes = true)
         {
             var attrs = new List<Attribute>();
 
@@ -84,7 +84,7 @@ namespace CustomUI.BSML
                 attrs.Add(new Attribute(this, attr, controllerType));
 
             var newType = GetController(attrs, controllerType);
-            if (newType != null) controllerType = newType;
+            if (hasController = newType != null) controllerType = newType;
 
             if (allowElementAttributes)
             {
@@ -97,9 +97,49 @@ namespace CustomUI.BSML
         }
 
         // Text elements have their own IElement type
-        internal IEnumerable<IElement> ReadTree(IEnumerable<XmlNode> elements, Type owningType)
+        internal IEnumerable<Element> ReadTree(IEnumerable<XmlNode> nodes, Type owningType)
         {
-            return new IElement[0];
+            foreach (var node in nodes)
+            {
+                if (node is XmlText text)
+                {
+                    var el = Activator.CreateInstance(BSML.TextElementType) as TextElement;
+                    el.Initialize(text);
+                    yield return el;
+                }
+                else if (node is XmlElement elem)
+                {
+                    if (Attribute.IsElementAttribute(elem)) continue;
+
+                    var ns = elem.NamespaceURI;
+                    var name = elem.LocalName;
+
+                    var type = BSML.GetCustomElementType(ns, name);
+
+                    if (type == null)
+                    {
+                        Logger.log.Warn($"Could not find element type {ns} {name}; ignoring");
+                        continue;
+                    }
+
+                    var own = owningType;
+                    var attrs = GetAttributes(elem, ref own, out var hasController).ToArray();
+
+                    var el = Activator.CreateInstance(type) as Element;
+                    el.Initialize(attrs);
+
+                    var subElems = ReadTree(elem.ChildNodes.Cast<XmlNode>(), own);
+
+                    foreach (var e in subElems)
+                        el.Add(e);
+
+                    yield return el;
+                }
+                else
+                {
+                    Logger.log.Warn($"Unknown node type {node.GetType()}");
+                }
+            }
         }
     }
 }

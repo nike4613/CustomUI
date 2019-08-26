@@ -1,16 +1,18 @@
 ﻿
 
+using System.Collections;
+using System.Collections.Generic;
 using CustomUI.BSML;
 
 namespace Tests
 {
     [ElementName("MyElement")]
     [ElementNamespace("bsml://tester")]
-    public class CustomElement : IElement
+    public class CustomElement : Element
     {
         public Attribute[] Attributes { get; set; }
 
-        public void Initialize(Attribute[] attributes)
+        public override void Initialize(Attribute[] attributes)
         {
             Attributes = attributes;
         }
@@ -24,7 +26,7 @@ namespace Tests
         public object OutBindingElem { get; set; }
 
 
-        public IElement Ref { get; set; }
+        public Element Ref { get; set; }
 
         public class ListCell
         {

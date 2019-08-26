@@ -127,7 +127,7 @@ namespace CustomUI.BSML
         /// <summary>
         /// The content of this element attribute. Only valid on <see cref="AttributeType.ElementAttribute"/>.
         /// </summary>
-        public IElement[] ElementContent { get; private set; }
+        public Element[] ElementContent { get; private set; }
 
         internal Attribute(BSMLParser parser, XmlAttribute attr, Type connectedType)
         {

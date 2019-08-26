@@ -17,15 +17,16 @@ namespace CustomUI.BSML
         internal static void ResetGlobalState()
         {
             sharedState = new ConditionalWeakTable<Type, object>();
+            customElementRegistrar.Clear();
         }
 
-        public static void RegisterCustomElement<T>() where T : IElement =>
+        public static void RegisterCustomElement<T>() where T : Element =>
             RegisterCustomElementImpl(typeof(T));
 
         public static void RegisterCustomElement(Type type)
         {
-            if (!typeof(IElement).IsAssignableFrom(type))
-                throw new ArgumentException($"Argument not derived from {nameof(IElement)}", nameof(type));
+            if (!typeof(Element).IsAssignableFrom(type))
+                throw new ArgumentException($"Argument not derived from {nameof(Element)}", nameof(type));
             RegisterCustomElementImpl(type);
         }
 
@@ -36,6 +37,10 @@ namespace CustomUI.BSML
                 throw new ArgumentException(string.Format(errorFormat, typeof(T).Name));
             return attr;
         }
+
+        // namespace, name
+        private static Dictionary<Tuple<string, string>, Type> customElementRegistrar = new Dictionary<Tuple<string, string>, Type>();
+        private static Dictionary<string, Type> topLevelTypeRegistrar = new Dictionary<string, Type>();
 
         internal static void RegisterCustomElementImpl(Type type)
         {
@@ -48,9 +53,38 @@ namespace CustomUI.BSML
                 nameSpace = ""; // this means the user must not have a default xmlns attribute and not specify namespace to use this
             }
 
-
-
+            RegisterCustomElementImpl(type, nameSpace, name);
         }
+
+        internal static void RegisterCustomElementImpl(Type type, string nameSpace, string name)
+        {
+            customElementRegistrar.Add(Tuple.Create(nameSpace, name), type);
+        }
+        internal static void RegisterTopLevelElement(Type type, string name)
+        {
+            topLevelTypeRegistrar.Add(name, type);
+        }
+
+        internal static Type GetCustomElementType(string nameSpace, string name)
+        {
+            if (customElementRegistrar.TryGetValue(Tuple.Create(nameSpace, name), out var val))
+                return val;
+            else
+                return null;
+        }
+
+        internal static Type GetTopLevelElementType(string name)
+        {
+            if (topLevelTypeRegistrar.TryGetValue(name, out var val))
+                return val;
+            else
+                return null;
+        }
+
+        internal static Type TextElementType { get; private set; }
+
+        internal static void SetTextElementType<T>() where T : TextElement
+            => TextElementType = typeof(T);
 
         private static ConditionalWeakTable<Type, object> sharedState = new ConditionalWeakTable<Type, object>();
 

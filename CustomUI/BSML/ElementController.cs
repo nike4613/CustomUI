@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace CustomUI.BSML
 {
-    public class ElementController
+    public abstract class ElementController
     {
+
+        public Element OwnedElement { get; internal set; }
 
     }
 }

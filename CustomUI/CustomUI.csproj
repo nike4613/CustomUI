@@ -87,7 +87,7 @@
     <Compile Include="BSML\BSMLParser.cs" />
     <Compile Include="BSML\DelegateTypes.cs" />
     <Compile Include="BSML\ElementController.cs" />
-    <Compile Include="BSML\IElement.cs" />
+    <Compile Include="BSML\Element.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\Extensions.cs" />

@@ -137,7 +137,9 @@ namespace Tests
 
             var ogOwner = typeof(MainPanelController);
             var owner = ogOwner;
-            var attrs = bsml.GetAttributes(doc.DocumentElement.FirstChild as XmlElement, ref owner).ToArray();
+            var attrs = bsml.GetAttributes(doc.DocumentElement.FirstChild as XmlElement, ref owner, out var hasController).ToArray();
+
+            Assert.IsFalse(hasController);
 
             VerifyCustomElementStringAttributes(attrs, ogOwner);
         }

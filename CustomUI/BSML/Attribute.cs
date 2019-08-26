@@ -242,7 +242,10 @@ namespace CustomUI.BSML
 
             Type = AttributeType.ElementAttribute;
 
-            ElementAttributes = parser.GetAttributes(elem, ref connectedType, false).ToArray();
+            ElementAttributes = parser.GetAttributes(elem, ref connectedType, out var hasController, false).ToArray();
+
+            if (hasController)
+                throw new InvalidProgramException("Cannot have a controller attribute on an element attribute");
 
             ElementContent = parser.ReadTree(elem.ChildNodes.Cast<XmlNode>(), connectedType).ToArray();
         }

@@ -18,7 +18,7 @@ namespace Tests
         }
     }
 
-    public class MainPanelController
+    public class MainPanelController : ElementController
     {
         public object InBinding { get; set; }
         public object OutBinding { get; set; }

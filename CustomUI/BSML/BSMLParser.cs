@@ -123,10 +123,17 @@ namespace CustomUI.BSML
                     }
 
                     var own = owningType;
-                    var attrs = GetAttributes(elem, ref own, out var hasController).ToArray();
+                    var attrs = GetAttributes(elem, ref own, out var hasController);
 
                     var el = Activator.CreateInstance(type) as Element;
-                    el.Initialize(attrs);
+
+                    if (hasController)
+                    {
+                        var controller = Activator.CreateInstance(own) as ElementController;
+                        controller.OwnedElement = el;
+                    }
+
+                    el.InitializeInternal(attrs);
 
                     var subElems = ReadTree(elem.ChildNodes.Cast<XmlNode>(), own);
 

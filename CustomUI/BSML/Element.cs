@@ -31,7 +31,32 @@ namespace CustomUI.BSML
 
         IEnumerator IEnumerable.GetEnumerator() => (children as IEnumerable).GetEnumerator();
 
+
+        public ElementController Controller { get; internal set; }
+
         public abstract void Initialize(Attribute[] attributes);
+
+        internal void InitializeInternal(IEnumerable<Attribute> attributes)
+        {
+            Attribute attr = null;
+            List<Attribute> attrs = new List<Attribute>();
+
+            foreach (var a in attributes)
+            {
+                if (a.Type == AttributeType.SelfRef)
+                {
+                    if (attr != null) throw new InvalidProgramException("Cannot have 2 ref parameters on one element");
+                    attr = a;
+                }
+                else
+                    attrs.Add(a);
+            }
+
+            if (attr != null)
+                attr.BindingSetter(Controller, this);
+
+            Initialize(attrs.ToArray());
+        }
     }
 
     public abstract class TextElement : Element

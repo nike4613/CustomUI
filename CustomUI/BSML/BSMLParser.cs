@@ -32,20 +32,29 @@ namespace CustomUI.BSML
         }
 
 
+        internal struct ParseState
+        {
+            public Type Type;
+            public ElementController Ref;
+        }
+
         public Element Parse()
         { // seperate because there are only a handful of valid top-level elements that should be processed
 
+            var root = tree.DocumentElement;
 
-            return null;
+            var type = BSML.GetTopLevelElementType(root.LocalName);
+
+            var state = new ParseState { Ref = null, Type = null };
+
+            return MakeElement(root, type, state);
         }
 
-        private Type GetController(IEnumerable<Attribute> attrs, Type currentOwner)
+        private Type GetControllerType(Attribute controller, Type currentOwner)
         {
-            var controller = attrs.FirstOrDefault(a => a.Type == AttributeType.Literal
-                                               && a.NameSpace == BSML.CoreNamespace
-                                               && a.Name == "controller");
-
-            if (controller == null) return null;
+            if (!(controller.Type == AttributeType.Literal
+               && controller.NameSpace == BSML.CoreNamespace
+               && controller.Name == "controller")) return null;
 
             var value = controller.LiteralValue;
             if (value.StartsWith("."))
@@ -76,28 +85,65 @@ namespace CustomUI.BSML
             }
         }
 
-        internal IEnumerable<Attribute> GetAttributes(XmlElement element, ref Type controllerType, out bool hasController, bool allowElementAttributes = true)
+        internal IEnumerable<Attribute> GetAttributes(XmlElement element, ref ParseState state, out bool hasController, bool allowElementAttributes = true)
         {
             var attrs = new List<Attribute>();
 
-            foreach (var attr in element.Attributes.Cast<XmlAttribute>())
-                attrs.Add(new Attribute(this, attr, controllerType));
+            hasController = false;
 
-            var newType = GetController(attrs, controllerType);
-            if (hasController = newType != null) controllerType = newType;
+            foreach (var attr in element.Attributes.Cast<XmlAttribute>())
+            {
+                var atr = new Attribute(this, attr, state.Type);
+
+                var newT = GetControllerType(atr, state.Type);
+                if (newT != null)
+                {
+                    if (hasController)
+                        throw new InvalidProgramException("Cannot specify multiple controllers for one element");
+
+                    hasController = true;
+                    state.Type = newT;
+                    state.Ref = Activator.CreateInstance(newT) as ElementController;
+                }
+
+                attrs.Add(atr);
+            }
 
             if (allowElementAttributes)
             {
                 foreach (var node in element.ChildNodes.Cast<XmlNode>())
                     if (node is XmlElement el && Attribute.IsElementAttribute(el))
-                        attrs.Add(new Attribute(this, el, controllerType));
+                    {
+                        var children = ReadTree(el.ChildNodes.Cast<XmlNode>(), state);
+
+                        attrs.Add(new Attribute(this, el, state, children.ToArray()));
+                    }
             }
 
             return attrs;
         }
 
+        internal Element MakeElement(XmlElement elem, Type type, ParseState state)
+        {
+            var attrs = GetAttributes(elem, ref state, out var hasController);
+
+            var el = Activator.CreateInstance(type) as Element;
+
+            el.Controller = state.Ref;
+            if (hasController) state.Ref.OwnedElement = el;
+
+            el.InitializeInternal(attrs);
+
+            var subElems = ReadTree(elem.ChildNodes.Cast<XmlNode>(), state);
+
+            foreach (var e in subElems)
+                el.Add(e);
+
+            return el;
+        }
+
         // Text elements have their own IElement type
-        internal IEnumerable<Element> ReadTree(IEnumerable<XmlNode> nodes, Type owningType)
+        internal IEnumerable<Element> ReadTree(IEnumerable<XmlNode> nodes, ParseState state)
         {
             foreach (var node in nodes)
             {
@@ -122,25 +168,7 @@ namespace CustomUI.BSML
                         continue;
                     }
 
-                    var own = owningType;
-                    var attrs = GetAttributes(elem, ref own, out var hasController);
-
-                    var el = Activator.CreateInstance(type) as Element;
-
-                    if (hasController)
-                    {
-                        var controller = Activator.CreateInstance(own) as ElementController;
-                        controller.OwnedElement = el;
-                    }
-
-                    el.InitializeInternal(attrs);
-
-                    var subElems = ReadTree(elem.ChildNodes.Cast<XmlNode>(), own);
-
-                    foreach (var e in subElems)
-                        el.Add(e);
-
-                    yield return el;
+                    yield return MakeElement(elem, type, state);
                 }
                 else
                 {

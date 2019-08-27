@@ -26,6 +26,7 @@ namespace Tests
             logger = new TestLogger(TestContext);
             plugin.Init(logger);
 
+            BSML.RegisterTopLevelElement<PanelRootElement>();
             BSML.RegisterCustomElement<CustomElement>();
         }
 
@@ -136,8 +137,8 @@ namespace Tests
             var doc = bsml.Doc;
 
             var ogOwner = typeof(MainPanelController);
-            var owner = ogOwner;
-            var attrs = bsml.GetAttributes(doc.DocumentElement.FirstChild as XmlElement, ref owner, out var hasController).ToArray();
+            var state = new BSMLParser.ParseState { Ref = new MainPanelController(), Type = ogOwner };
+            var attrs = bsml.GetAttributes(doc.DocumentElement.FirstChild as XmlElement, ref state, out var hasController).ToArray();
 
             Assert.IsFalse(hasController);
 
@@ -165,10 +166,19 @@ namespace Tests
             var doc = bsml.Doc;
 
             var owner = typeof(MainPanelController);
+            var state = new BSMLParser.ParseState { Ref = new MainPanelController(), Type = owner };
 
-            var elems = bsml.ReadTree(new[] { doc.DocumentElement.FirstChild }, owner).ToArray();
+            var elems = bsml.ReadTree(new[] { doc.DocumentElement.FirstChild }, state).ToArray();
 
             VerifyCustomElementStringRootChildren(elems, owner);
+        }
+
+        [TestMethod]
+        public void RootParsing()
+        {
+            var bsml = BSMLParser.LoadFrom(Assembly.GetExecutingAssembly(), "Tests", new StringReader(Literals.CustomElementBSML));
+
+            var elem = bsml.Parse();
         }
     }
 }

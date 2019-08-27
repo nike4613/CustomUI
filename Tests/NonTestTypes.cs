@@ -18,6 +18,15 @@ namespace Tests
         }
     }
 
+    [ElementName("panel")]
+    public class PanelRootElement : Element
+    {
+        public override void Initialize(Attribute[] attributes)
+        {
+
+        }
+    }
+
     public class MainPanelController : ElementController
     {
         public object InBinding { get; set; }

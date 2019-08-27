@@ -229,25 +229,26 @@ namespace CustomUI.BSML
                 throw new InvalidProgramException("'ref' parameter MUST be an OutputBinding");
         }
 
-        internal Attribute(BSMLParser parser, XmlElement elem, Type connectedType)
+        internal Attribute(BSMLParser parser, XmlElement elem, BSMLParser.ParseState state, Element[] children)
         {
             if (!IsElementAttribute(elem))
                 throw new ArgumentException("When an Attribute is constructed with an Element, is MUST be a valid Element attribute", nameof(elem));
 
-            Logger.log.Debug($"Processing element attribute {elem?.Name} {elem?.NamespaceURI} for {connectedType} on {elem?.ParentNode?.Name} {elem?.ParentNode?.NamespaceURI}");
+            Logger.log.Debug($"Processing element attribute {elem?.Name} {elem?.NamespaceURI} for {state.Type} on {elem?.ParentNode?.Name} {elem?.ParentNode?.NamespaceURI}");
 
             Name = elem.LocalName.Split('.').Last();
             NameSpace = elem.NamespaceURI;
-            LinkedType = connectedType;
+            LinkedType = state.Type;
 
             Type = AttributeType.ElementAttribute;
 
-            ElementAttributes = parser.GetAttributes(elem, ref connectedType, out var hasController, false).ToArray();
+            ElementAttributes = parser.GetAttributes(elem, ref state, out var hasController, false).ToArray();
 
             if (hasController)
                 throw new InvalidProgramException("Cannot have a controller attribute on an element attribute");
 
-            ElementContent = parser.ReadTree(elem.ChildNodes.Cast<XmlNode>(), connectedType).ToArray();
+            ElementContent = children;
+            //ElementContent = parser.ReadTree(elem.ChildNodes.Cast<XmlNode>(), connectedType).ToArray();
         }
 
         internal static bool IsElementAttribute(XmlElement elem)

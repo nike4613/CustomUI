@@ -36,7 +36,7 @@ namespace CustomUI.BSML
 
         public abstract void Initialize(Attribute[] attributes);
 
-        internal void InitializeInternal(IEnumerable<Attribute> attributes)
+        internal virtual void InitializeInternal(IEnumerable<Attribute> attributes)
         {
             Attribute attr = null;
             List<Attribute> attrs = new List<Attribute>();
@@ -48,8 +48,8 @@ namespace CustomUI.BSML
                     if (attr != null) throw new InvalidProgramException("Cannot have 2 ref parameters on one element");
                     attr = a;
                 }
-                else
-                    attrs.Add(a);
+
+                attrs.Add(a);
             }
 
             if (attr != null)

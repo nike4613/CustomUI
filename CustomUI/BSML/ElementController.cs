@@ -9,19 +9,7 @@ namespace CustomUI.BSML
     public abstract class ElementController
     {
 
-        private Element ownedElement;
-        public Element OwnedElement
-        {
-            get => ownedElement;
-            set
-            {
-                value.Controller = this;
-                if (ownedElement != null)
-                    ownedElement.Controller = null;
-
-                ownedElement = value;
-            }
-        }
+        public Element OwnedElement { get; internal set; }
 
     }
 }

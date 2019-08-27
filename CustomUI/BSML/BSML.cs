@@ -18,6 +18,8 @@ namespace CustomUI.BSML
         {
             sharedState = new ConditionalWeakTable<Type, object>();
             customElementRegistrar.Clear();
+            topLevelTypeRegistrar.Clear();
+            TextElementType = null;
         }
 
         public static void RegisterCustomElement<T>() where T : Element =>
@@ -60,6 +62,14 @@ namespace CustomUI.BSML
         {
             customElementRegistrar.Add(Tuple.Create(nameSpace, name), type);
         }
+
+        internal static void RegisterTopLevelElement<T>() where T : Element
+        {
+            const string NoAttrFormat = "Attempted to register top level element with no {0}!";
+            var name = GetAttributeOrThrow<ElementNameAttribute>(typeof(T), NoAttrFormat).Name;
+            RegisterTopLevelElement(typeof(T), name);
+        }
+
         internal static void RegisterTopLevelElement(Type type, string name)
         {
             topLevelTypeRegistrar.Add(name, type);

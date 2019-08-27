@@ -179,6 +179,21 @@ namespace Tests
             var bsml = BSMLParser.LoadFrom(Assembly.GetExecutingAssembly(), "Tests", new StringReader(Literals.CustomElementBSML));
 
             var elem = bsml.Parse();
+
+            var baseController = elem.Controller;
+            Assert.IsInstanceOfType(baseController, typeof(MainPanelController));
+            var controller = baseController as MainPanelController;
+            Assert.AreEqual(elem, controller.OwnedElement);
+
+            Assert.IsInstanceOfType(elem, typeof(PanelRootElement));
+            var panel = elem as PanelRootElement;
+
+            Assert.AreEqual(1, panel.Count);
+
+            var child = panel[0];
+            Assert.AreEqual(child, controller.Ref);
+
+            VerifyCustomElementStringRootChildren(panel.ToArray(), typeof(MainPanelController));
         }
     }
 }

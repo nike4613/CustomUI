@@ -32,6 +32,12 @@ namespace CustomUI.BSML
         IEnumerator IEnumerable.GetEnumerator() => (children as IEnumerable).GetEnumerator();
 
 
+        public Element this[int i]
+        {
+            get => children[i];
+            set => children[i] = value;
+        }
+
         public ElementController Controller { get; internal set; }
 
         public abstract void Initialize(Attribute[] attributes);

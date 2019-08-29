@@ -81,7 +81,7 @@ namespace CustomUI.BSML
         /// The literal value of the attribute. In the case of bindings, it will be the name of the
         /// field/property/method referenced. 
         /// </summary>
-        public string LiteralValue { get; }
+        public string LiteralValue { get; private set; }
 
         /// <summary>
         /// A getter delegate type.
@@ -129,6 +129,46 @@ namespace CustomUI.BSML
         /// </summary>
         public Element[] ElementContent { get; private set; }
 
+        internal delegate void AttributeVisitor(AttributeType type, string coreValue);
+
+        internal static void VisitAttributeValueType(string value, string nameSpace, string name, AttributeVisitor visit)
+        {
+            value = value.Trim();
+
+            if (value[0] == '{' && value[value.Length - 1] == '}')
+            {
+                //Type = AttributeType.Binding;
+                var trimmed = value.Substring(1, value.Length - 2).Trim();
+
+                var type = AttributeType.Binding;
+                if (trimmed[0] == '=') type = AttributeType.InputBinding;
+                if (trimmed[trimmed.Length - 1] == '=') type = AttributeType.OutputBinding;
+
+                if (type == AttributeType.InputBinding || type == AttributeType.OutputBinding)
+                {
+                    value = trimmed.Trim('=').Trim();
+
+                    if (type == AttributeType.OutputBinding && nameSpace == BSML.CoreNamespace && name == "ref")
+                    {
+                        type = AttributeType.SelfRef;
+                    }
+
+                    visit(type, value);
+                }
+                else if (trimmed.EndsWith("()"))
+                {
+                    value = trimmed.Trim('(',')').Trim();
+                    type = AttributeType.FunctionBinding;
+
+                    visit(type, value);
+                }
+            }
+            else
+            {
+                visit(AttributeType.Literal, value);
+            }
+        }
+
         internal Attribute(BSMLParser parser, XmlAttribute attr, Type connectedType)
         {
             Logger.log.Debug($"Processing attribute {attr.OuterXml} for {connectedType} on {attr?.OwnerElement?.Name} {attr?.OwnerElement?.NamespaceURI}");
@@ -138,89 +178,66 @@ namespace CustomUI.BSML
             LinkedType = connectedType;
             LiteralValue = attr.Value.Trim();
 
-            if (LiteralValue[0] == '{' && LiteralValue[LiteralValue.Length - 1] == '}')
+            VisitAttributeValueType(LiteralValue, NameSpace, Name, (ty, val) =>
             {
-                Type = AttributeType.Binding;
-                var trimmed = LiteralValue.Substring(1, LiteralValue.Length - 2).Trim();
+                LiteralValue = val;
+                Type = ty;
 
-                if (trimmed[0] == '=') Type = AttributeType.InputBinding;
-                if (trimmed[trimmed.Length - 1] == '=') Type = AttributeType.OutputBinding;
-
-                if (Type == AttributeType.InputBinding || Type == AttributeType.OutputBinding)
+                if (Type == AttributeType.InputBinding)
                 {
-                    LiteralValue = trimmed.Trim('=').Trim();
+                    var selfParam = Parameter(typeof(object), "self");
 
-                    // TODO: support multi-level accesses
-
-                    if (Type == AttributeType.InputBinding)
-                    {
-                        var selfParam = Parameter(typeof(object), "self");
-
-                        var propExpr =
-                            PropertyOrField(
-                                Convert(
-                                    selfParam,
-                                    connectedType
-                                ),
-                                LiteralValue
-                            );
-
-                        BindingType = propExpr.Type;
-
-                        BindingGetter = Lambda<GetBinding>(
-                                Convert(propExpr, typeof(object)),
-                                selfParam
-                            ).CompileFast();
-                    }
-
-                    if (Type == AttributeType.OutputBinding)
-                    {
-                        var selfParam = Parameter(typeof(object), "self");
-                        var valueParam = Parameter(typeof(object), "value");
-
-                        var propExpr =
-                            PropertyOrField(
-                                Convert(
-                                    selfParam,
-                                    connectedType
-                                ),
-                                LiteralValue
-                            );
-
-                        BindingType = propExpr.Type;
-
-                        BindingSetter = Lambda<SetBinding>(
-                                Assign(
-                                    propExpr,
-                                    Convert(
-                                        valueParam,
-                                        BindingType
-                                    )
-                                ),
+                    var propExpr =
+                        PropertyOrField(
+                            Convert(
                                 selfParam,
-                                valueParam
-                            ).CompileFast();
-                    }
+                                connectedType
+                            ),
+                            LiteralValue
+                        );
 
-                    if (Type == AttributeType.OutputBinding && NameSpace == BSML.CoreNamespace && Name == "ref")
-                    {
-                        Type = AttributeType.SelfRef;
-                    }
+                    BindingType = propExpr.Type;
+
+                    BindingGetter = Lambda<GetBinding>(
+                            Convert(propExpr, typeof(object)),
+                            selfParam
+                        ).CompileFast();
                 }
-                else if (trimmed.EndsWith("()"))
+
+                if (Type == AttributeType.OutputBinding || Type == AttributeType.SelfRef)
                 {
-                    LiteralValue = trimmed;
-                    Type = AttributeType.FunctionBinding;
+                    var selfParam = Parameter(typeof(object), "self");
+                    var valueParam = Parameter(typeof(object), "value");
 
-                    trimmed = trimmed.TrimEnd('(', ')').Trim();
+                    var propExpr =
+                        PropertyOrField(
+                            Convert(
+                                selfParam,
+                                connectedType
+                            ),
+                            LiteralValue
+                        );
 
-                    FunctionBinding = connectedType.GetMethod(trimmed, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                    BindingType = propExpr.Type;
+
+                    BindingSetter = Lambda<SetBinding>(
+                            Assign(
+                                propExpr,
+                                Convert(
+                                    valueParam,
+                                    BindingType
+                                )
+                            ),
+                            selfParam,
+                            valueParam
+                        ).CompileFast();
                 }
-            }
-            else
-            {
-                Type = AttributeType.Literal;
-            }
+
+                if (Type == AttributeType.FunctionBinding)
+                {
+                    FunctionBinding = connectedType.GetMethod(val, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                }
+            });
 
             if (Type == AttributeType.Binding)
                 throw new InvalidProgramException("Invalid binding type!");

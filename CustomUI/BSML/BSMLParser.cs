@@ -132,12 +132,13 @@ namespace CustomUI.BSML
             el.Controller = state.Ref;
             if (hasController) state.Ref.OwnedElement = el;
 
-            el.InitializeInternal(attrs);
+            if (el.InitializeInternal(attrs))
+            {
+                var subElems = ReadTree(elem.ChildNodes.Cast<XmlNode>(), state);
 
-            var subElems = ReadTree(elem.ChildNodes.Cast<XmlNode>(), state);
-
-            foreach (var e in subElems)
-                el.Add(e);
+                foreach (var e in subElems)
+                    el.Add(e);
+            }
 
             return el;
         }

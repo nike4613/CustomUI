@@ -42,7 +42,8 @@ namespace CustomUI.BSML
 
         public abstract void Initialize(Attribute[] attributes);
 
-        internal virtual void InitializeInternal(IEnumerable<Attribute> attributes)
+        // returns whether or not children should be parsed and added, or the structure should be passed in
+        internal virtual bool InitializeInternal(IEnumerable<Attribute> attributes)
         {
             Attribute attr = null;
             List<Attribute> attrs = new List<Attribute>();
@@ -62,7 +63,11 @@ namespace CustomUI.BSML
                 attr.BindingSetter(Controller, this);
 
             Initialize(attrs.ToArray());
+
+            return true;
         }
+
+        internal virtual void AddChildXml(IEnumerable<XmlNode> nodes) { }
     }
 
     public abstract class TextElement : Element

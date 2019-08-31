@@ -139,6 +139,7 @@ namespace CustomUI.BSML
                 foreach (var e in subElems)
                     el.Add(e);
             }
+            else el.AddChildXml(elem.ChildNodes.Cast<XmlNode>());
 
             return el;
         }

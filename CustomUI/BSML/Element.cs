@@ -11,6 +11,7 @@ namespace CustomUI.BSML
     // interface for all custom elements, generated or not
     public abstract class Element : ICollection<Element> // is a collection of children
     {
+        #region Collection
         private List<Element> children = new List<Element>();
 
         public int Count => children.Count;
@@ -31,12 +32,12 @@ namespace CustomUI.BSML
 
         IEnumerator IEnumerable.GetEnumerator() => (children as IEnumerable).GetEnumerator();
 
-
         public Element this[int i]
         {
             get => children[i];
             set => children[i] = value;
         }
+        #endregion
 
         public ElementController Controller { get; internal set; }
 

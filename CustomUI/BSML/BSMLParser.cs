@@ -132,7 +132,7 @@ namespace CustomUI.BSML
             el.Controller = state.Ref;
             if (hasController) state.Ref.OwnedElement = el;
 
-            if (el.InitializeInternal(attrs, def.State))
+            if (el.InitializeInternal(attrs.ToList(), def.State))
             {
                 var subElems = ReadTree(elem.ChildNodes.Cast<XmlNode>(), state);
 

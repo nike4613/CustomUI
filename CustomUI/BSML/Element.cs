@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml;
+using UnityEngine;
 
 namespace CustomUI.BSML
 {
@@ -41,13 +42,14 @@ namespace CustomUI.BSML
 
         public ElementController Controller { get; internal set; }
 
+        protected T ControllerAs<T>() where T : ElementController => Controller as T;
+
         public abstract void Initialize(Attribute[] attributes, object state);
 
         // returns whether or not children should be parsed and added, or the structure should be passed in
-        internal virtual bool InitializeInternal(IEnumerable<Attribute> attributes, object state)
+        internal virtual bool InitializeInternal(List<Attribute> attributes, object state)
         {
             Attribute attr = null;
-            List<Attribute> attrs = new List<Attribute>();
 
             foreach (var a in attributes)
             {
@@ -56,19 +58,33 @@ namespace CustomUI.BSML
                     if (attr != null) throw new InvalidProgramException("Cannot have 2 ref parameters on one element");
                     attr = a;
                 }
-
-                attrs.Add(a);
             }
 
             if (attr != null)
                 attr.BindingSetter(Controller, this);
 
-            Initialize(attrs.ToArray(), state);
+            Initialize(attributes.ToArray(), state);
 
             return true;
         }
 
         internal virtual void AddChildXml(IEnumerable<XmlNode> nodes) { }
+
+        /// <summary>
+        /// Refreshes all bindings and updates the rendered structure appropriately.
+        /// It is valid to call <see cref="Render(RectTransform)"/> from here.
+        /// Should also call <see cref="Refresh"/> on all children.
+        /// </summary>
+        public abstract void Refresh();
+
+        /// <summary>
+        /// Renders this element into a Unity GameObject heirarchy. This is expected 
+        /// to call <see cref="Render(RectTransform)"/> on all valid children. DO NOT
+        /// destroy any game objects you do not create. Reparent your children.
+        /// This should also correctly reparent the heirarchy if a new parent is given.
+        /// </summary>
+        /// <param name="parentTransform"></param>
+        public abstract void Render(RectTransform parentTransform);
     }
 
     public abstract class TextElement : Element

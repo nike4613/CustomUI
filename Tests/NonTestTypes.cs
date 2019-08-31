@@ -3,6 +3,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using CustomUI.BSML;
+using UnityEngine;
 
 namespace Tests
 {
@@ -16,12 +17,32 @@ namespace Tests
         {
             Attributes = attributes;
         }
+
+        public override void Refresh()
+        {
+
+        }
+
+        public override void Render(RectTransform parentTransform)
+        {
+
+        }
     }
 
     [ElementName("panel")]
     public class PanelRootElement : Element
     {
         public override void Initialize(Attribute[] attributes, object state)
+        {
+
+        }
+
+        public override void Refresh()
+        {
+
+        }
+
+        public override void Render(RectTransform parentTransform)
         {
 
         }

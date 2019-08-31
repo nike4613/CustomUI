@@ -19,17 +19,17 @@ namespace CustomUI.BSML
             sharedState = new ConditionalWeakTable<Type, object>();
             customElementRegistrar.Clear();
             topLevelTypeRegistrar.Clear();
-            TextElementType = null;
+            TextElementType = default;
         }
 
-        public static void RegisterCustomElement<T>() where T : Element =>
-            RegisterCustomElementImpl(typeof(T));
+        public static void RegisterCustomElement<T>(object state = null) where T : Element =>
+            RegisterCustomElementImpl(typeof(T), state);
 
-        public static void RegisterCustomElement(Type type)
+        public static void RegisterCustomElement(Type type, object state = null)
         {
             if (!typeof(Element).IsAssignableFrom(type))
                 throw new ArgumentException($"Argument not derived from {nameof(Element)}", nameof(type));
-            RegisterCustomElementImpl(type);
+            RegisterCustomElementImpl(type, state);
         }
 
         private static T GetAttributeOrThrow<T>(MemberInfo info, string errorFormat) where T : System.Attribute
@@ -40,11 +40,39 @@ namespace CustomUI.BSML
             return attr;
         }
 
-        // namespace, name
-        private static Dictionary<Tuple<string, string>, Type> customElementRegistrar = new Dictionary<Tuple<string, string>, Type>();
-        private static Dictionary<string, Type> topLevelTypeRegistrar = new Dictionary<string, Type>();
+        public struct ElementDefinition
+        {
+            public static ElementDefinition Empty = default;
 
-        internal static void RegisterCustomElementImpl(Type type)
+            public Type Type;
+            public object State;
+
+            public override bool Equals(object obj)
+            {
+                return obj is ElementDefinition definition &&
+                       EqualityComparer<Type>.Default.Equals(Type, definition.Type) &&
+                       EqualityComparer<object>.Default.Equals(State, definition.State);
+            }
+
+            public override int GetHashCode()
+            {
+                var hashCode = -1743767797;
+                hashCode = hashCode * -1521134295 + EqualityComparer<Type>.Default.GetHashCode(Type);
+                hashCode = hashCode * -1521134295 + EqualityComparer<object>.Default.GetHashCode(State);
+                return hashCode;
+            }
+
+            public static bool operator ==(ElementDefinition a, ElementDefinition b) =>
+                a.Type == b.Type && a.State == b.State;
+            public static bool operator !=(ElementDefinition a, ElementDefinition b) =>
+                !(a == b);
+        }
+
+        // namespace, name
+        private static Dictionary<Tuple<string, string>, ElementDefinition> customElementRegistrar = new Dictionary<Tuple<string, string>, ElementDefinition>();
+        private static Dictionary<string, ElementDefinition> topLevelTypeRegistrar = new Dictionary<string, ElementDefinition>();
+
+        internal static void RegisterCustomElementImpl(Type type, object state = null)
         {
             const string NoAttrFormat = "Attempted to register element with no {0}!";
             var name = GetAttributeOrThrow<ElementNameAttribute>(type, NoAttrFormat).Name;
@@ -55,46 +83,46 @@ namespace CustomUI.BSML
                 nameSpace = ""; // this means the user must not have a default xmlns attribute and not specify namespace to use this
             }
 
-            RegisterCustomElementImpl(type, nameSpace, name);
+            RegisterCustomElementImpl(new ElementDefinition { Type = type, State = state }, nameSpace, name);
         }
 
-        internal static void RegisterCustomElementImpl(Type type, string nameSpace, string name)
+        internal static void RegisterCustomElementImpl(ElementDefinition type, string nameSpace, string name)
         {
             customElementRegistrar.Add(Tuple.Create(nameSpace, name), type);
         }
 
-        internal static void RegisterTopLevelElement<T>() where T : Element
+        internal static void RegisterTopLevelElement<T>(object state = null) where T : Element
         {
             const string NoAttrFormat = "Attempted to register top level element with no {0}!";
             var name = GetAttributeOrThrow<ElementNameAttribute>(typeof(T), NoAttrFormat).Name;
-            RegisterTopLevelElement(typeof(T), name);
+            RegisterTopLevelElement(new ElementDefinition { Type = typeof(T), State = state }, name);
         }
 
-        internal static void RegisterTopLevelElement(Type type, string name)
+        internal static void RegisterTopLevelElement(ElementDefinition type, string name)
         {
             topLevelTypeRegistrar.Add(name, type);
         }
 
-        internal static Type GetCustomElementType(string nameSpace, string name)
+        internal static ElementDefinition GetCustomElementDef(string nameSpace, string name)
         {
             if (customElementRegistrar.TryGetValue(Tuple.Create(nameSpace, name), out var val))
                 return val;
             else
-                return null;
+                return default;
         }
 
-        internal static Type GetTopLevelElementType(string name)
+        internal static ElementDefinition GetTopLevelElementDef(string name)
         {
             if (topLevelTypeRegistrar.TryGetValue(name, out var val))
                 return val;
             else
-                return null;
+                return default;
         }
 
-        internal static Type TextElementType { get; private set; }
+        internal static ElementDefinition TextElementType { get; private set; }
 
-        internal static void SetTextElementType<T>() where T : TextElement
-            => TextElementType = typeof(T);
+        internal static void SetTextElementType<T>(object state = null) where T : TextElement
+            => TextElementType = new ElementDefinition { Type = typeof(T), State = state };
 
         private static ConditionalWeakTable<Type, object> sharedState = new ConditionalWeakTable<Type, object>();
 

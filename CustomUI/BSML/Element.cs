@@ -40,10 +40,10 @@ namespace CustomUI.BSML
 
         public ElementController Controller { get; internal set; }
 
-        public abstract void Initialize(Attribute[] attributes);
+        public abstract void Initialize(Attribute[] attributes, object state);
 
         // returns whether or not children should be parsed and added, or the structure should be passed in
-        internal virtual bool InitializeInternal(IEnumerable<Attribute> attributes)
+        internal virtual bool InitializeInternal(IEnumerable<Attribute> attributes, object state)
         {
             Attribute attr = null;
             List<Attribute> attrs = new List<Attribute>();
@@ -62,7 +62,7 @@ namespace CustomUI.BSML
             if (attr != null)
                 attr.BindingSetter(Controller, this);
 
-            Initialize(attrs.ToArray());
+            Initialize(attrs.ToArray(), state);
 
             return true;
         }
@@ -72,6 +72,6 @@ namespace CustomUI.BSML
 
     public abstract class TextElement : Element
     { // Initialize(Attribute[]) will not be called on ITextElement
-        public abstract void Initialize(XmlText text);
+        public abstract void Initialize(XmlText text, object state);
     }
 }

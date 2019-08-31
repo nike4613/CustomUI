@@ -43,7 +43,7 @@ namespace CustomUI.BSML
 
             var root = tree.DocumentElement;
 
-            var type = BSML.GetTopLevelElementType(root.LocalName);
+            var type = BSML.GetTopLevelElementDef(root.LocalName);
 
             var state = new ParseState { Ref = null, Type = null };
 
@@ -123,16 +123,16 @@ namespace CustomUI.BSML
             return attrs;
         }
 
-        internal Element MakeElement(XmlElement elem, Type type, ParseState state)
+        internal Element MakeElement(XmlElement elem, BSML.ElementDefinition def, ParseState state)
         {
             var attrs = GetAttributes(elem, ref state, out var hasController);
 
-            var el = Activator.CreateInstance(type) as Element;
+            var el = Activator.CreateInstance(def.Type) as Element;
 
             el.Controller = state.Ref;
             if (hasController) state.Ref.OwnedElement = el;
 
-            if (el.InitializeInternal(attrs))
+            if (el.InitializeInternal(attrs, def.State))
             {
                 var subElems = ReadTree(elem.ChildNodes.Cast<XmlNode>(), state);
 
@@ -150,8 +150,8 @@ namespace CustomUI.BSML
             {
                 if (node is XmlText text)
                 {
-                    var el = Activator.CreateInstance(BSML.TextElementType) as TextElement;
-                    el.Initialize(text);
+                    var el = Activator.CreateInstance(BSML.TextElementType.Type) as TextElement;
+                    el.Initialize(text, BSML.TextElementType.State);
                     yield return el;
                 }
                 else if (node is XmlElement elem)
@@ -161,9 +161,9 @@ namespace CustomUI.BSML
                     var ns = elem.NamespaceURI;
                     var name = elem.LocalName;
 
-                    var type = BSML.GetCustomElementType(ns, name);
+                    var type = BSML.GetCustomElementDef(ns, name);
 
-                    if (type == null)
+                    if (type == default)
                     {
                         Logger.log.Warn($"Could not find element type {ns} {name}; ignoring");
                         continue;

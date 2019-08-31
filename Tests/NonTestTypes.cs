@@ -12,7 +12,7 @@ namespace Tests
     {
         public Attribute[] Attributes { get; set; }
 
-        public override void Initialize(Attribute[] attributes)
+        public override void Initialize(Attribute[] attributes, object state)
         {
             Attributes = attributes;
         }
@@ -21,7 +21,7 @@ namespace Tests
     [ElementName("panel")]
     public class PanelRootElement : Element
     {
-        public override void Initialize(Attribute[] attributes)
+        public override void Initialize(Attribute[] attributes, object state)
         {
 
         }
